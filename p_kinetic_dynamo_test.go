@@ -41,6 +41,13 @@ func Test(t *testing.T) {
 	)
 	require.Nil(t, err)
 
-	_, err = getter.Get(partition_key, sort_key)
+	items, err := getter.Get(partition_key, sort_key)
 	require.Nil(t, err)
+	require.Len(t, items, 2)
+
+	require.Equal(t, partition_key, items[0].Get_partition_key())
+	require.Equal(t, sort_key, items[0].Get_sort_key())
+
+	require.Equal(t, partition_key, items[1].Get_partition_key())
+	require.Equal(t, sort_key+"-2", items[1].Get_sort_key())
 }

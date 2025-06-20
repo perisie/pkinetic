@@ -36,8 +36,8 @@ func (p *Pkinetic_dynamo) Get(partition_key string, prefix string) ([]*Item, err
 			data[k] = v.(*types.AttributeValueMemberS).Value
 		}
 		items = append(items, &Item{
-			partition_key: partition_key,
-			sort_key:      prefix,
+			partition_key: data["partition_key"],
+			sort_key:      data["sort_key"],
 			data:          data,
 		})
 	}
