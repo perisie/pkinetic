@@ -63,6 +63,12 @@ func Test(t *testing.T) {
 	require.Equal(t, sort_key+"-2", items[1].Get_sort_key())
 	require.Equal(t, "", items[1].Get_data()["name"])
 
+	item, err := getter.Get_single(partition_key, sort_key)
+	require.Nil(t, err)
+	require.Equal(t, partition_key, item.Get_partition_key())
+	require.Equal(t, sort_key, item.Get_sort_key())
+	require.Equal(t, "Ecah", item.Get_data()["name"])
+
 	var deleter Deleter = pkinetic_dynamo
 	err = deleter.Delete(partition_key, sort_key)
 	require.Nil(t, err)

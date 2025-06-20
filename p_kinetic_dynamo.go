@@ -90,6 +90,34 @@ func (p *Pkinetic_dynamo) Get(partition_key string, prefix string) ([]*Item, err
 	return items, nil
 }
 
+func (p *Pkinetic_dynamo) Get_single(partition_key string, sort_key string) (*Item, error) {
+	get_item_output, err := p.dynamo.GetItem(context.Background(), &dynamodb.GetItemInput{
+		TableName: aws.String(p.table),
+		Key: map[string]types.AttributeValue{
+			"partition_key": &types.AttributeValueMemberS{
+				Value: partition_key,
+			},
+			"sort_key": &types.AttributeValueMemberS{
+				Value: sort_key,
+			},
+		},
+		ConsistentRead: aws.Bool(true),
+	})
+	if err != nil {
+		return nil, err
+	}
+	data := map[string]string{}
+	for k, v := range get_item_output.Item {
+		data[k] = v.(*types.AttributeValueMemberS).Value
+	}
+	item := &Item{
+		partition_key: data["partition_key"],
+		sort_key:      data["sort_key"],
+		data:          data,
+	}
+	return item, nil
+}
+
 func (p *Pkinetic_dynamo) Create(partition_key string, sort_key string, data map[string]string) error {
 	item := map[string]types.AttributeValue{
 		"partition_key": &types.AttributeValueMemberS{
