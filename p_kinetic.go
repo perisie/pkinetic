@@ -3,6 +3,8 @@ package pkinetic
 type Pkinetic interface {
 	Creator
 	Getter
+	Updater
+	Deleter
 }
 
 type Creator interface {
@@ -11,4 +13,12 @@ type Creator interface {
 
 type Getter interface {
 	Get(partition_key string, prefix string) ([]*Item, error)
+}
+
+type Updater interface {
+	Update(partition_key string, sort_key string, update map[string]string) error
+}
+
+type Deleter interface {
+	Delete(partition_key string, sort_key string) error
 }
