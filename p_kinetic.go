@@ -30,3 +30,8 @@ type Updater interface {
 type Deleter interface {
 	Delete(partition_key string, sort_key string) error
 }
+
+const (
+	aws_access_key_id     = "AWS_ACCESS_KEY_ID"
+	aws_secret_access_key = "AWS_SECRET_ACCESS_KEY"
+)

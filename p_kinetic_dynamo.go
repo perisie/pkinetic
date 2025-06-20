@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"os"
 	"strings"
 )
 
@@ -197,6 +198,14 @@ func Pkinetic_dynamo_new(
 	region string,
 	table string,
 ) (*Pkinetic_dynamo, error) {
+	panic_msg_env := "env variable not set: "
+	if os.Getenv(aws_access_key_id) == "" {
+		panic(panic_msg_env + aws_access_key_id)
+	}
+	if os.Getenv(aws_secret_access_key) == "" {
+		panic(panic_msg_env + aws_secret_access_key)
+	}
+
 	cfg, err := config.LoadDefaultConfig(
 		context.Background(),
 		config.WithRegion(region),
