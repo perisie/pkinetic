@@ -10,5 +10,5 @@ type Creator interface {
 }
 
 type Getter interface {
-	Get(partition_key string, prefix string) ([]map[string]string, error)
+	Get(partition_key string, prefix string) ([]*Item, error)
 }

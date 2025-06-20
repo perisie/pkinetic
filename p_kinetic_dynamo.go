@@ -13,8 +13,8 @@ type Pkinetic_dynamo struct {
 	table  string
 }
 
-func (p *Pkinetic_dynamo) Get(partition_key string, prefix string) ([]map[string]string, error) {
-	datas := make([]map[string]string, 0)
+func (p *Pkinetic_dynamo) Get(partition_key string, prefix string) ([]*Item, error) {
+	items := make([]*Item, 0)
 	query_output, err := p.dynamo.Query(context.Background(), &dynamodb.QueryInput{
 		TableName:              aws.String(p.table),
 		KeyConditionExpression: aws.String("partition_key = :partition_key AND begins_with(sort_key, :prefix)"),
@@ -28,16 +28,20 @@ func (p *Pkinetic_dynamo) Get(partition_key string, prefix string) ([]map[string
 		},
 	})
 	if err != nil {
-		return datas, err
+		return items, err
 	}
 	for _, item := range query_output.Items {
 		data := map[string]string{}
 		for k, v := range item {
 			data[k] = v.(*types.AttributeValueMemberS).Value
 		}
-		datas = append(datas, data)
+		items = append(items, &Item{
+			partition_key: partition_key,
+			sort_key:      prefix,
+			data:          data,
+		})
 	}
-	return datas, nil
+	return items, nil
 }
 
 func (p *Pkinetic_dynamo) Create(partition_key string, sort_key string, data map[string]string) error {
