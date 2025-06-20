@@ -90,6 +90,54 @@ func (p *Pkinetic_dynamo) Get(partition_key string, prefix string) ([]*Item, err
 	return items, nil
 }
 
+func (p *Pkinetic_dynamo) Get_gsi(
+	index string,
+	index_partition_key_name string,
+	index_partition_key_value string,
+	index_sort_key_name string,
+	index_sort_key_prefix string,
+) ([]*Item, error) {
+	items := make([]*Item, 0)
+	key_condition_expression := "#pk = :index_partition_key"
+	expression_attribute_names := map[string]string{
+		"#pk": index_partition_key_name,
+	}
+	expression_attribute_values := map[string]types.AttributeValue{
+		":index_partition_key": &types.AttributeValueMemberS{
+			Value: index_partition_key_value,
+		},
+	}
+	if len(index_sort_key_prefix) > 0 {
+		key_condition_expression += " AND begins_with(#sk, :index_sort_key_prefix)"
+		expression_attribute_names["#sk"] = index_sort_key_name
+		expression_attribute_values[":index_sort_key_prefix"] = &types.AttributeValueMemberS{
+			Value: index_sort_key_prefix,
+		}
+	}
+	query_output, err := p.dynamo.Query(context.Background(), &dynamodb.QueryInput{
+		TableName:                 aws.String(p.table),
+		IndexName:                 aws.String(index),
+		KeyConditionExpression:    aws.String(key_condition_expression),
+		ExpressionAttributeNames:  expression_attribute_names,
+		ExpressionAttributeValues: expression_attribute_values,
+	})
+	if err != nil {
+		return items, err
+	}
+	for _, item := range query_output.Items {
+		data := map[string]string{}
+		for k, v := range item {
+			data[k] = v.(*types.AttributeValueMemberS).Value
+		}
+		items = append(items, &Item{
+			partition_key: data["partition_key"],
+			sort_key:      data["sort_key"],
+			data:          data,
+		})
+	}
+	return items, nil
+}
+
 func (p *Pkinetic_dynamo) Get_single(partition_key string, sort_key string) (*Item, error) {
 	get_item_output, err := p.dynamo.GetItem(context.Background(), &dynamodb.GetItemInput{
 		TableName: aws.String(p.table),

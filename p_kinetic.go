@@ -14,6 +14,13 @@ type Creator interface {
 type Getter interface {
 	Get(partition_key string, prefix string) ([]*Item, error)
 	Get_single(partition_key string, sort_key string) (*Item, error)
+	Get_gsi(
+		index string,
+		index_partition_key_name string,
+		index_partition_key_value string,
+		index_sort_key_name string,
+		index_sort_key_prefix string,
+	) ([]*Item, error)
 }
 
 type Updater interface {
