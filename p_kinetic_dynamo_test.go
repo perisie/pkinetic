@@ -91,18 +91,18 @@ func Test(t *testing.T) {
 
 	err = creator.Create(partition_key, sort_key, map[string]string{
 		"name": "A",
-		"dob":  "",
+		"dob":  "0000-00-00",
 	})
 	require.NotNil(t, err)
 
 	err = creator.Create(partition_key, sort_key+"-2", map[string]string{
 		"name": "B",
-		"dob":  "",
+		"dob":  "0000-00-00",
 	})
 	require.Nil(t, err)
 
 	var getter Getter = pkinetic_dynamo
-	items, err := getter.Get(partition_key, sort_key)
+	items, err := getter.Get(partition_key, "")
 	require.Nil(t, err)
 	require.Len(t, items, 2)
 

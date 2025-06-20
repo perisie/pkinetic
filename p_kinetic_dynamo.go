@@ -61,17 +61,22 @@ func (p *Pkinetic_dynamo) Update(partition_key string, sort_key string, update m
 
 func (p *Pkinetic_dynamo) Get(partition_key string, prefix string) ([]*Item, error) {
 	items := make([]*Item, 0)
-	query_output, err := p.dynamo.Query(context.Background(), &dynamodb.QueryInput{
-		TableName:              aws.String(p.table),
-		KeyConditionExpression: aws.String("partition_key = :partition_key AND begins_with(sort_key, :prefix)"),
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":partition_key": &types.AttributeValueMemberS{
-				Value: partition_key,
-			},
-			":prefix": &types.AttributeValueMemberS{
-				Value: prefix,
-			},
+	key_condition_expression := "partition_key = :partition_key"
+	expression_attribute_values := map[string]types.AttributeValue{
+		":partition_key": &types.AttributeValueMemberS{
+			Value: partition_key,
 		},
+	}
+	if prefix != "" {
+		key_condition_expression += " AND begins_with(sort_key, :prefix)"
+		expression_attribute_values[":prefix"] = &types.AttributeValueMemberS{
+			Value: prefix,
+		}
+	}
+	query_output, err := p.dynamo.Query(context.Background(), &dynamodb.QueryInput{
+		TableName:                 aws.String(p.table),
+		KeyConditionExpression:    aws.String(key_condition_expression),
+		ExpressionAttributeValues: expression_attribute_values,
 	})
 	if err != nil {
 		return items, err
