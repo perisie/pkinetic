@@ -32,7 +32,7 @@ func (p *Pkinetic_dynamo) Delete(partition_key string, sort_key string) error {
 }
 
 func (p *Pkinetic_dynamo) Update(partition_key string, sort_key string, update map[string]string) error {
-	updates := []string{}
+	var updates []string
 	attribute_names := map[string]string{}
 	attribute_values := map[string]types.AttributeValue{}
 	for k, v := range update {
@@ -172,7 +172,7 @@ func (p *Pkinetic_dynamo) Get_single(partition_key string, sort_key string) (*It
 	return item, nil
 }
 
-func (p *Pkinetic_dynamo) Create(partition_key string, sort_key string, data map[string]string) error {
+func (p *Pkinetic_dynamo) Create(partition_key string, sort_key string, data map[string]string) (*Item, error) {
 	item := map[string]types.AttributeValue{
 		"partition_key": &types.AttributeValueMemberS{
 			Value: partition_key,
@@ -191,7 +191,17 @@ func (p *Pkinetic_dynamo) Create(partition_key string, sort_key string, data map
 		Item:                item,
 		ConditionExpression: aws.String("attribute_not_exists(partition_key)"),
 	})
-	return err
+	if err != nil {
+		return nil, err
+	}
+
+	item_out := &Item{
+		partition_key: partition_key,
+		sort_key:      sort_key,
+		data:          data,
+	}
+
+	return item_out, err
 }
 
 func Pkinetic_dynamo_new(

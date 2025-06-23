@@ -17,7 +17,7 @@ func Test_gsi(t *testing.T) {
 	dob := time.Now().Format(time.RFC3339Nano)
 
 	var creator Creator = pkinetic_dynamo
-	_ = creator.Create(
+	_, _ = creator.Create(
 		uuid.New().String(),
 		uuid.New().String(),
 		map[string]string{
@@ -25,7 +25,7 @@ func Test_gsi(t *testing.T) {
 			"dob":  dob,
 		},
 	)
-	_ = creator.Create(
+	_, _ = creator.Create(
 		uuid.New().String(),
 		uuid.New().String(),
 		map[string]string{
@@ -33,7 +33,7 @@ func Test_gsi(t *testing.T) {
 			"dob":  dob,
 		},
 	)
-	_ = creator.Create(
+	_, _ = creator.Create(
 		uuid.New().String(),
 		uuid.New().String(),
 		map[string]string{
@@ -83,23 +83,28 @@ func Test(t *testing.T) {
 	var creator Creator = pkinetic_dynamo
 	partition_key := uuid.New().String()
 	sort_key := uuid.New().String()
-	err = creator.Create(partition_key, sort_key, map[string]string{
+	item, err := creator.Create(partition_key, sort_key, map[string]string{
 		"name": "Aishah",
 		"dob":  "1998-11-01",
 	})
 	require.Nil(t, err)
+	require.Equal(t, partition_key, item.Get_partition_key())
+	require.Equal(t, sort_key, item.Get_sort_key())
 
-	err = creator.Create(partition_key, sort_key, map[string]string{
+	item, err = creator.Create(partition_key, sort_key, map[string]string{
 		"name": "A",
 		"dob":  "0000-00-00",
 	})
 	require.NotNil(t, err)
+	require.Nil(t, item)
 
-	err = creator.Create(partition_key, sort_key+"-2", map[string]string{
+	item, err = creator.Create(partition_key, sort_key+"-2", map[string]string{
 		"name": "B",
 		"dob":  "0000-00-00",
 	})
 	require.Nil(t, err)
+	require.Equal(t, partition_key, item.Get_partition_key())
+	require.Equal(t, sort_key+"-2", item.Get_sort_key())
 
 	var getter Getter = pkinetic_dynamo
 	items, err := getter.Get(partition_key, "")
@@ -130,7 +135,7 @@ func Test(t *testing.T) {
 	require.Equal(t, sort_key+"-2", items[1].Get_sort_key())
 	require.Equal(t, "B", items[1].Get_data()["name"])
 
-	item, err := getter.Get_single(partition_key, sort_key)
+	item, err = getter.Get_single(partition_key, sort_key)
 	require.Nil(t, err)
 	require.Equal(t, partition_key, item.Get_partition_key())
 	require.Equal(t, sort_key, item.Get_sort_key())

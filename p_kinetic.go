@@ -8,7 +8,7 @@ type Pkinetic interface {
 }
 
 type Creator interface {
-	Create(partition_key string, sort_key string, data map[string]string) error
+	Create(partition_key string, sort_key string, data map[string]string) (*Item, error)
 }
 
 type Getter interface {
