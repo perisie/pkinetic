@@ -74,25 +74,39 @@ func (p *Pkinetic_dynamo) Get(partition_key string, prefix string) ([]*Item, err
 			Value: prefix,
 		}
 	}
-	query_output, err := p.dynamo.Query(context.Background(), &dynamodb.QueryInput{
+	query_input := &dynamodb.QueryInput{
 		TableName:                 aws.String(p.table),
 		KeyConditionExpression:    aws.String(key_condition_expression),
 		ExpressionAttributeValues: expression_attribute_values,
-	})
+		ConsistentRead:            aws.Bool(true),
+	}
+
+	query_output, err := p.dynamo.Query(context.Background(), query_input)
 	if err != nil {
 		return items, err
 	}
-	for _, item := range query_output.Items {
-		data := map[string]string{}
-		for k, v := range item {
-			data[k] = v.(*types.AttributeValueMemberS).Value
+
+	for first := true; first || query_output.LastEvaluatedKey != nil; first = false {
+		query_input.ExclusiveStartKey = query_output.LastEvaluatedKey
+
+		query_output, err = p.dynamo.Query(context.Background(), query_input)
+		if err != nil {
+			return items, err
 		}
-		items = append(items, &Item{
-			partition_key: data["partition_key"],
-			sort_key:      data["sort_key"],
-			data:          data,
-		})
+
+		for _, item := range query_output.Items {
+			data := map[string]string{}
+			for k, v := range item {
+				data[k] = v.(*types.AttributeValueMemberS).Value
+			}
+			items = append(items, &Item{
+				partition_key: data["partition_key"],
+				sort_key:      data["sort_key"],
+				data:          data,
+			})
+		}
 	}
+
 	return items, nil
 }
 
